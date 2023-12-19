@@ -77,43 +77,60 @@ def tf_idf_vec(X_train, X_test, X_val):
 
 
 
+  
 
-def learning_model (data_features_train, data_target_train,  #функция принимает данные и модель
-                    data_features_valid, data_target_valid,
-                    data_features_test, data_target_test,
-                    model, C):
-    max_f1_test = [0,0]
-    max_f1_valid = [0,0]
-    max_acc_test = [0,0]
-    max_acc_valid = [0,0]
-    
+max_f1_test = [0,0]
+max_f1_valid = [0,0]
+max_acc_test = [0,0]
+max_acc_valid = [0,0]
 
-    model.fit(data_features_train, data_target_train)     #обучим модель
-    predicted_valid = model.predict(data_features_valid) #сделаем предсказания на валидационной выборке
-    predicted_test = model.predict(data_features_test)     #сделаем предсказания на тестовой выборке
 
-    result_valid = f1_score(data_target_valid, predicted_valid, average='weighted') #посчитаем метрику на валидационной выборке
-    result_test = f1_score(data_target_test, predicted_test, average='weighted') #посчитаем метрику на тестовой выборке
+def learning_model(data_features_train, data_target_train,  #функция принимает данные и модель
+                      data_features_valid, data_target_valid,
+                      data_features_test, data_target_test,
+                      model, C):
 
-    result_valid_acc = accuracy_score(data_target_valid, predicted_valid) #посчитаем метрику accuracy на валидационой выборке
-    result_test_acc = accuracy_score(data_target_test, predicted_test) #посчитаем метрику accuracy на тестовой выборке
 
-    if result_valid > max_f1_valid[1]:
-      max_f1_valid[1] = result_valid
-      max_f1_valid[0] = C
-    if result_test > max_f1_test[1]:
-      max_f1_test[1] = result_test
-      max_f1_test[0] = C
-    if result_valid_acc > max_acc_valid[1]:
-      max_acc_valid[1] = result_valid_acc
-      max_acc_valid[0] = C
-    if result_test_acc > max_acc_test[1]:
-      max_acc_test[1] = result_test_acc
-      max_acc_test[0] = C
+  model.fit(data_features_train, data_target_train)     #обучим модель
+  predicted_valid = model.predict(data_features_valid) #сделаем предсказания на валидационной выборке
+  predicted_test = model.predict(data_features_test)     #сделаем предсказания на тестовой выборке
+  result_valid = f1_score(data_target_valid, predicted_valid, average='weighted') #посчитаем метрику на валидационной выборке
+  result_test = f1_score(data_target_test, predicted_test, average='weighted') #посчитаем метрику на тестовой выборке
+  result_valid_acc = accuracy_score(data_target_valid, predicted_valid) #посчитаем метрику accuracy на валидационой выборке
+  result_test_acc = accuracy_score(data_target_test, predicted_test) #посчитаем метрику accuracy на тестовой выборке
 
-    print(f'Максимальный f1_score = {max_f1_test[1]}, полученный при значении С = {max_f1_test[0]} на тестовой выборке')
-    print(f'Максимальный f1_score = {max_f1_valid[1]}, полученный при значении С = {max_f1_valid[0]} на валидационной выборке')
-    print(f'Максимальный accuracy = {max_acc_test[1]}, полученный при значении С = {max_acc_test[0]} на тестовой выборке')
-    print(f'Максимальный accuracy = {max_acc_valid[1]}, полученный при значении С = {max_acc_valid[0]} на валидационной выборке')
+  if result_valid > max_f1_valid[1]:
+    max_f1_valid[1] = result_valid
+    max_f1_valid[0] = C
+  if result_test > max_f1_test[1]:
+    max_f1_test[1] = result_test
+    max_f1_test[0] = C
+  if result_valid_acc > max_acc_valid[1]:
+    max_acc_valid[1] = result_valid_acc
+    max_acc_valid[0] = C
+  if result_test_acc > max_acc_test[1]:
+    max_acc_test[1] = result_test_acc
+    max_acc_test[0] = C
 
-    return result_valid, result_test, result_valid_acc, result_test_acc
+
+  return result_valid, result_test, result_valid_acc, result_test_acc
+
+
+def print_score(max_f1_test, max_f1_valid, max_acc_test, max_acc_valid):
+  print(f'Максимальный f1_score = {max_f1_test[1]}, полученный при значении С = {max_f1_test[0]} на тестовой выборке')
+  print(f'Максимальный f1_score = {max_f1_valid[1]}, полученный при значении С = {max_f1_valid[0]} на валидационной выборке')
+  print(f'Максимальный accuracy = {max_acc_test[1]}, полученный при значении С = {max_acc_test[0]} на тестовой выборке')
+  print(f'Максимальный accuracy = {max_acc_valid[1]}, полученный при значении С = {max_acc_valid[0]} на валидационной выборке')
+
+
+def vanga_answers(vanga):
+    emotions_labels = {0: 'sadness',
+                        1: 'joy',
+                        2: 'love',
+                        3: 'anger',
+                        4: 'fear',
+                        5: 'surprise'}
+
+    for key, value in emotions_labels.items():
+        if vanga[0] == key:
+            print(f'You are {value}, be happy!')
