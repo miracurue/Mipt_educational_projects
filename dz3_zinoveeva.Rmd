@@ -1,0 +1,163 @@
+---
+title: "dz3_zinoveeva"
+output: html_document
+date: "2024-03-29"
+---
+
+```{r}
+# Установка пакетов, если они еще не установлены:
+if (!require("readxl")) install.packages("readxl")
+if (!require("dplyr")) install.packages("dplyr")
+# Подключение пакетов
+library(readxl)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+# Чтение данных из файла Excel
+data <- read_excel("pima.xlsx")
+```
+
+## Задание 1
+
+**Рассчитайте описательные статистики для переменных** `glucose`**,** `pressure`**,** `mass`
+
+```{r}
+# Выбор интересующих нас столбцов
+selected_data <- data %>% select(glucose, pressure, mass)
+
+# Функция для расчета описательных статистик
+describe_data <- function(data) {
+  summary_stats <- data.frame(
+    Variable = names(data),
+    Observations = sapply(data, function(x) sum(!is.na(x))),
+    Mean = sapply(data, mean, na.rm = TRUE),
+    SD = sapply(data, sd, na.rm = TRUE),
+    Q1 = sapply(data, function(x) quantile(x, 0.25, na.rm = TRUE)),
+    Q3 = sapply(data, function(x) quantile(x, 0.75, na.rm = TRUE)),
+    Min = sapply(data, min, na.rm = TRUE),
+    Max = sapply(data, max, na.rm = TRUE)
+  )
+  return(summary_stats)
+}
+
+# Расчет и вывод результатов
+result <- describe_data(selected_data)
+print(result)
+```
+
+## Задание 2
+
+**Рассчитайте описательную статистику для переменной** `diabetes`**. Создайте на основе переменной** `age` **новую переменную** `age_group`**, которая будет отражать следующие возрастные группы: 21–35, 36–49 и 50+. Посчитайте описательную статистику для новой переменной.**
+
+```{r}
+# Расчет абсолютной и относительной частоты для переменной diabetes
+diabetes_freq <- table(data$diabetes)
+diabetes_rel_freq <- prop.table(diabetes_freq)
+
+# Вывод частот для diabetes
+print("Абсолютные частоты для diabetes:")
+print(diabetes_freq)
+print("Относительные частоты для diabetes:")
+print(diabetes_rel_freq)
+
+# Создание новой переменной age_group на основе age
+data <- data %>%
+  mutate(age_group = case_when(
+    age >= 21 & age <= 35 ~ "21-35",
+    age >= 36 & age <= 49 ~ "36-49",
+    age >= 50 ~ "50+",
+    TRUE ~ NA_character_ # На случай, если есть данные вне указанных диапазонов
+  ))
+
+# Расчет абсолютной и относительной частоты для переменной age_group
+age_group_freq <- table(data$age_group)
+age_group_rel_freq <- prop.table(age_group_freq)
+
+# Вывод частот для age_group
+print("Абсолютные частоты для age_group:")
+print(age_group_freq)
+print("Относительные частоты для age_group:")
+print(age_group_rel_freq)
+```
+
+## Задание 3
+
+**Определите 90% доверительный интервал для переменной** `pedigree`
+
+```{r}
+# Вычисление среднего значения, стандартного отклонения и размера выборки для переменной pedigree
+mean_pedigree <- mean(data$pedigree, na.rm = TRUE)
+sd_pedigree <- sd(data$pedigree, na.rm = TRUE)
+n_pedigree <- sum(!is.na(data$pedigree))
+
+# Z-значение для 90% доверительного интервала
+z_value <- qnorm(0.95)  # используем 0.95, так как это односторонний интервал от среднего до критической точки
+
+# Расчет доверительного интервала
+margin_error <- z_value * (sd_pedigree / sqrt(n_pedigree))
+ci_lower <- mean_pedigree - margin_error
+ci_upper <- mean_pedigree + margin_error
+
+# Вывод результатов
+cat("90% доверительный интервал для переменной pedigree:", ci_lower, "-", ci_upper, "\n")
+```
+
+## Задание 4
+
+**Постройте график плотности вероятности для переменной** `glucose` **и отметьте на нем среднее значение. Для той же переменной постройте гистограмму. Постройте два ящика с усами для значений** `pos` **и** `neg` **соответственно переменной** `diabetes`**.**
+
+#### **График плотности вероятности для `glucose`**
+
+```{r}
+
+# График плотности с отметкой среднего значения
+ggplot(data, aes(x = glucose)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  geom_vline(aes(xintercept = mean(glucose, na.rm = TRUE)), 
+             color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Плотность вероятности для Glucose", 
+       subtitle = paste("Среднее значение:", mean(data$glucose, na.rm = TRUE))) +
+  theme_minimal()
+
+```
+
+#### **Гистограмма для `glucose`**
+
+```{r}
+# Гистограмма для glucose
+ggplot(data, aes(x = glucose)) +
+  geom_histogram(bins = 30, fill = "orange", color = "black") +
+  labs(title = "Гистограмма для Glucose", x = "Glucose", y = "Частота") +
+  theme_minimal()
+```
+
+#### **Ящики с усами для `diabetes`**
+
+```{r}
+# Ящики с усами для переменной diabetes
+ggplot(data, aes(x = diabetes, y = glucose, fill = diabetes)) +
+  geom_boxplot() +
+  labs(title = "Ящики с усами для Glucose по категориям Diabetes", x = "Diabetes", y = "Glucose") +
+  scale_fill_manual(values = c("pos" = "green", "neg" = "blue")) +
+  theme_minimal()
+```
+
+## Задание 5
+
+**Постройте на одном графике две диаграммы рассеяния для наличия или отсутствия диабета. По оси X представьте значения обхвата трицепса, а по оси Y — массу тела. Выполните окрашивание, заливку и группирование по переменной** `diabetes`**.**
+
+```{r}
+# Диаграмма рассеяния с группировкой по diabetes
+ggplot(data, aes(x = triceps, y = mass, color = diabetes, fill = diabetes)) +
+  geom_point(alpha = 0.5, shape = 21) +  # shape 21 позволяет использовать заливку для точек
+  labs(title = "Диаграмма рассеяния: обхват трицепса и масса тела", 
+       x = "Обхват трицепса", 
+       y = "Масса тела",
+       color = "Diabetes",
+       fill = "Diabetes") +
+  scale_color_manual(values = c("pos" = "red", "neg" = "blue")) +
+  scale_fill_manual(values = c("pos" = "red", "neg" = "blue")) +
+  theme_minimal()
+```
